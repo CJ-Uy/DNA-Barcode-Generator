@@ -8,13 +8,11 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "predeploy": "nuxt generate",
-    "deploy": "gh-pages -d dist"
+    "predeploy": "nuxt generate"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
     "@nuxt/ui": "^2.13.0",
-    "gh-pages": "^6.1.1",
     "nuxt": "^3.10.1"
   },
   "dependencies": {
