@@ -33,6 +33,7 @@ const downloadBarcode = async () => {
       windowHeight: barcodeElement.value.scrollHeight,
       scrollY: -window.scrollY,
       scale: 1, // You can adjust the scale for better resolution
+      backgroundColor: null,
     });
     const image = canvas.toDataURL("image/png");
 
