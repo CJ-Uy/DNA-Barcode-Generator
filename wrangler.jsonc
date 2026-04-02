@@ -4,6 +4,6 @@
   // dist/_worker.js/wrangler.json and overrides pages_build_output_dir.
   // Actual build output is dist/ — Cloudflare Pages handles deploy automatically,
   // no custom deploy command should be set in the dashboard.
-  "name": "dna-barcode-generator",
+  "name": "dna-barcoder",
   "compatibility_date": "2025-01-01"
 }
