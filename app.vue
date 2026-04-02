@@ -53,6 +53,7 @@ const downloadBarcode = async () => {
 </script>
 
 <template>
+  <UApp>
   <div class="m-10">
     <UCard class="mb-10">
       <template #header>
@@ -110,4 +111,5 @@ const downloadBarcode = async () => {
       </div>
     </div>
   </div>
+  </UApp>
 </template>

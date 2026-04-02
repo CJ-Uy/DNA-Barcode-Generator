@@ -1,0 +1,6 @@
+{
+  // https://developers.cloudflare.com/pages/framework-guides/deploy-a-nuxt-site/
+  "name": "dna-barcode-generator",
+  "pages_build_output_dir": ".output/public",
+  "compatibility_date": "2025-01-01"
+}

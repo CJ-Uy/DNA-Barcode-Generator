@@ -36,6 +36,7 @@ npm run preview    # Preview production build
 
 - Hosted on Cloudflare Pages via Git integration (push to `main` → auto-build)
 - In the Cloudflare UI: build command = `pnpm run generate`, output dir = `.output/public`
+- `nitro.preset: 'cloudflare-pages'` must be set explicitly — auto-detection picks `cloudflare-module` (Workers) which fails with a `__STATIC_CONTENT_MANIFEST` error
 - `nitro.prerender.autoSubfolderIndex: false` is required to match Cloudflare's route matching rules
 - No `app.baseURL` needed — Cloudflare serves from root `/`
 
