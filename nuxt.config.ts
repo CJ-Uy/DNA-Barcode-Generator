@@ -10,12 +10,8 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', 'nitro-cloudflare-dev'],
   css: ['~/assets/css/main.css'],
   nitro: {
-    preset: 'cloudflare-pages',
-    prerender: {
-      autoSubfolderIndex: false,
-    },
+    preset: 'cloudflare-module',
     cloudflare: {
-      deployConfig: true,
       nodeCompat: true,
     },
   },
