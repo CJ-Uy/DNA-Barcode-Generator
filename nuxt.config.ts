@@ -9,6 +9,16 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui', 'nitro-cloudflare-dev'],
   css: ['~/assets/css/main.css'],
+  icon: {
+    serverBundle: {
+      collections: ['heroicons', 'lucide'],
+    },
+  },
+  vite: {
+    optimizeDeps: {
+      include: ['html2canvas'],
+    },
+  },
   nitro: {
     preset: 'cloudflare-module',
     cloudflare: {

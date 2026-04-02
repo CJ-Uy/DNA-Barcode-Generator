@@ -18,10 +18,16 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "@iconify-json/heroicons": "^1.2.3",
+    "@iconify-json/lucide": "^1.2.101",
     "@nuxt/ui": "^3.3.7",
     "@types/node": "^25.5.0",
-    "h3": "2.0.1-rc.20",
     "nitro-cloudflare-dev": "^0.2.2",
     "wrangler": "^4.79.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@nuxt/icon": "^2.2.1"
+    }
   }
 }
