@@ -2,7 +2,7 @@
 
 A single-page web app that visualizes DNA sequences as color-coded barcodes and exports them as PNG, JPG, or SVG. Sequences can be typed or pasted manually, loaded from built-in examples, or fetched live from NCBI using a species name search.
 
-Live at: [https://dna-barcode-generator.pages.dev](https://dna-barcode-generator.pages.dev)
+Live at: [https://dna-barcoder.cjuy.dev/](https://dna-barcoder.cjuy.dev/)
 
 ## Features
 
