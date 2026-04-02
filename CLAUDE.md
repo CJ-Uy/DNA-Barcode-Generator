@@ -35,7 +35,8 @@ npm run preview    # Preview production build
 ## Deploy Notes
 
 - Hosted on Cloudflare Pages via Git integration (push to `main` → auto-build)
-- In the Cloudflare UI: build command = `pnpm run generate`, output dir = `.output/public`
+- In the Cloudflare UI: build command = `pnpm run build`, **deploy command = blank** (Pages auto-deploys — do NOT set a deploy command)
+- Build output lands in `dist/` — Nitro's cloudflare-pages preset generates `dist/_worker.js/wrangler.json` and overrides `pages_build_output_dir`
 - `nitro.preset: 'cloudflare-pages'` must be set explicitly — auto-detection picks `cloudflare-module` (Workers) which fails with a `__STATIC_CONTENT_MANIFEST` error
 - `nitro.prerender.autoSubfolderIndex: false` is required to match Cloudflare's route matching rules
 - No `app.baseURL` needed — Cloudflare serves from root `/`
