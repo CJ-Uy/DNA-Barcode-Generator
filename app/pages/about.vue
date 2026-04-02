@@ -13,13 +13,13 @@ const colorLegend = [
 
     <UCard>
       <template #header>
-        <h1 class="text-xl font-bold text-neutral-800">About DNA Barcode Generator</h1>
+        <h1 class="text-xl font-bold text-neutral-800 dark:text-neutral-100">About DNA Barcode Generator</h1>
       </template>
 
-      <div class="flex flex-col gap-6 text-neutral-700 text-sm leading-relaxed">
+      <div class="flex flex-col gap-6 text-neutral-700 dark:text-neutral-300 text-sm leading-relaxed">
 
         <section>
-          <h2 class="text-base font-semibold text-neutral-800 mb-2">What is DNA Barcoding?</h2>
+          <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 mb-2">What is DNA Barcoding?</h2>
           <p class="mb-2">
             DNA barcoding is a technique for identifying species using short, standardized regions of the genome,
             similar to how a product barcode uniquely identifies an item. By comparing these sequences across organisms,
@@ -33,7 +33,7 @@ const colorLegend = [
         </section>
 
         <section>
-          <h2 class="text-base font-semibold text-neutral-800 mb-3">How the Colors Work</h2>
+          <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 mb-3">How the Colors Work</h2>
           <p class="mb-4">
             Each nucleotide in the sequence is mapped to a color and rendered as a vertical bar.
             The full sequence becomes a unique visual fingerprint:
@@ -42,15 +42,15 @@ const colorLegend = [
             <div v-for="item in colorLegend" :key="item.nucleotide" class="flex items-center gap-2">
               <div :style="{ backgroundColor: item.color }" class="w-2 h-8 rounded-sm shrink-0" />
               <div>
-                <div class="text-sm font-semibold text-neutral-800">{{ item.nucleotide }}</div>
-                <div class="text-xs text-neutral-500">{{ item.name }}</div>
+                <div class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{{ item.nucleotide }}</div>
+                <div class="text-xs text-neutral-500 dark:text-neutral-400">{{ item.name }}</div>
               </div>
             </div>
           </div>
         </section>
 
         <section>
-          <h2 class="text-base font-semibold text-neutral-800 mb-2">Data Source: NCBI Entrez</h2>
+          <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 mb-2">Data Source: NCBI Entrez</h2>
           <p class="mb-2">
             Species sequences are fetched from the
             <a href="https://www.ncbi.nlm.nih.gov/" target="_blank" rel="noopener" class="text-primary-600 hover:underline font-medium">
@@ -67,7 +67,7 @@ const colorLegend = [
         </section>
 
         <section>
-          <h2 class="text-base font-semibold text-neutral-800 mb-2">How to Use</h2>
+          <h2 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 mb-2">How to Use</h2>
           <ol class="list-decimal list-inside space-y-1">
             <li>Search for a species by name (common or scientific) and select a gene type</li>
             <li>The top matching sequence loads automatically, or you can browse the full results list</li>

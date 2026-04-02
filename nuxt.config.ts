@@ -7,6 +7,7 @@ export default defineNuxtConfig({
     },
   },
   devtools: { enabled: true },
+  colorMode: { preference: 'light' },
   modules: ['@nuxt/ui', 'nitro-cloudflare-dev'],
   css: ['~/assets/css/main.css'],
   icon: {

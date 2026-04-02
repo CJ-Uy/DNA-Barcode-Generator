@@ -175,8 +175,8 @@ const selectResult = async (result) => {
     <!-- Card 1: Species Search -->
     <UCard>
       <template #header>
-        <h2 class="text-lg font-semibold text-neutral-800">Search by Species</h2>
-        <p class="text-sm text-neutral-500 mt-0.5">Auto-populate a real DNA sequence from NCBI</p>
+        <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-100">Search by Species</h2>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">Auto-populate a real DNA sequence from NCBI</p>
       </template>
 
       <div class="flex flex-col gap-3">
@@ -219,8 +219,8 @@ const selectResult = async (result) => {
             :disabled="loadingResult"
             @click="selectResult(result)"
           >
-            <div class="font-medium text-neutral-800 truncate">{{ result.title }}</div>
-            <div class="text-neutral-400 text-xs mt-0.5">{{ result.length }} bp · ID: {{ result.id }}</div>
+            <div class="font-medium text-neutral-800 dark:text-neutral-100 truncate">{{ result.title }}</div>
+            <div class="text-neutral-400 dark:text-neutral-500 text-xs mt-0.5">{{ result.length }} bp · ID: {{ result.id }}</div>
           </button>
         </div>
 
@@ -240,8 +240,8 @@ const selectResult = async (result) => {
       <template #header>
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold text-neutral-800">Sequence</h2>
-            <p class="text-sm text-neutral-500 mt-0.5">Or paste your own DNA sequence below</p>
+            <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-100">Sequence</h2>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">Or paste your own DNA sequence below</p>
           </div>
           <UButton
             v-if="dnaSequence || barcodeColors.length"
@@ -258,11 +258,11 @@ const selectResult = async (result) => {
       <div class="flex flex-col gap-3">
         <!-- Example chips -->
         <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-xs text-neutral-400 font-medium">Examples:</span>
+          <span class="text-xs text-neutral-400 dark:text-neutral-500 font-medium">Examples:</span>
           <button
             v-for="ex in EXAMPLES"
             :key="ex.label"
-            class="text-xs px-2.5 py-1 rounded-full border border-neutral-200 hover:border-primary-400 hover:text-primary-700 text-neutral-600 transition-colors"
+            class="text-xs px-2.5 py-1 rounded-full border border-neutral-200 dark:border-neutral-700 hover:border-primary-400 hover:text-primary-700 text-neutral-600 dark:text-neutral-300 transition-colors"
             @click="loadExample(ex.sequence)"
           >
             {{ ex.label }}
@@ -276,10 +276,10 @@ const selectResult = async (result) => {
         />
 
         <!-- Stats -->
-        <div v-if="seqStats" class="flex flex-wrap gap-3 text-xs text-neutral-500">
-          <span><span class="font-semibold text-neutral-700">{{ seqStats.len }}</span> bp</span>
+        <div v-if="seqStats" class="flex flex-wrap gap-3 text-xs text-neutral-500 dark:text-neutral-400">
+          <span><span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ seqStats.len }}</span> bp</span>
           <span>·</span>
-          <span>GC: <span class="font-semibold text-neutral-700">{{ seqStats.gcContent }}%</span></span>
+          <span>GC: <span class="font-semibold text-neutral-700 dark:text-neutral-200">{{ seqStats.gcContent }}%</span></span>
           <span>·</span>
           <span class="text-green-700">A: {{ seqStats.A }}</span>
           <span class="text-blue-700">C: {{ seqStats.C }}</span>
@@ -304,7 +304,7 @@ const selectResult = async (result) => {
     <!-- Card 3: Barcode Output -->
     <UCard v-if="barcodeColors.length > 0">
       <template #header>
-        <h2 class="text-lg font-semibold text-neutral-800">Barcode</h2>
+        <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-100">Barcode</h2>
       </template>
 
       <div class="flex flex-col items-center gap-4">
@@ -332,13 +332,13 @@ const selectResult = async (result) => {
         <div class="flex flex-wrap justify-center gap-6">
           <div v-for="item in legendItems" :key="item.nucleotide" class="flex items-center gap-1.5">
             <div :style="{ backgroundColor: item.color }" class="w-1.5 h-5 rounded-sm" />
-            <span class="text-xs text-neutral-600 font-medium">{{ item.nucleotide }}</span>
+            <span class="text-xs text-neutral-600 dark:text-neutral-300 font-medium">{{ item.nucleotide }}</span>
           </div>
         </div>
 
         <!-- Width Slider -->
         <div class="w-full max-w-sm">
-          <div class="flex justify-between text-xs text-neutral-400 mb-1">
+          <div class="flex justify-between text-xs text-neutral-400 dark:text-neutral-500 mb-1">
             <span>Width</span>
             <span>{{ barcodeWidth }}px</span>
           </div>
@@ -353,7 +353,7 @@ const selectResult = async (result) => {
             type="checkbox"
             class="w-4 h-4 accent-primary-500 cursor-pointer"
           />
-          <label for="rect-lock" class="text-xs text-neutral-600 cursor-pointer select-none">
+          <label for="rect-lock" class="text-xs text-neutral-600 dark:text-neutral-300 cursor-pointer select-none">
             Rectangle lock — snap to clean block
             <span v-if="rectangleLock" class="text-neutral-400">({{ barsPerRow }} bars/row)</span>
           </label>
@@ -361,7 +361,7 @@ const selectResult = async (result) => {
 
         <!-- Advanced Settings Toggle -->
         <button
-          class="text-xs text-neutral-400 hover:text-neutral-600 transition-colors w-full max-w-sm text-left"
+          class="text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors w-full max-w-sm text-left"
           @click="showAdvanced = !showAdvanced"
         >
           {{ showAdvanced ? '▾ Hide advanced settings' : '▸ Advanced settings' }}
@@ -372,7 +372,7 @@ const selectResult = async (result) => {
 
           <!-- Bar Width -->
           <div>
-            <div class="flex justify-between text-xs text-neutral-500 mb-1">
+            <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <span>Bar width</span>
               <span>{{ barWidth }}px</span>
             </div>
@@ -381,7 +381,7 @@ const selectResult = async (result) => {
 
           <!-- Gap -->
           <div>
-            <div class="flex justify-between text-xs text-neutral-500 mb-1">
+            <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <span>Gap between bars</span>
               <span>{{ barGap }}px</span>
             </div>
@@ -390,7 +390,7 @@ const selectResult = async (result) => {
 
           <!-- Nucleotide Colors -->
           <div>
-            <p class="text-xs text-neutral-500 mb-2">Nucleotide colors</p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-2">Nucleotide colors</p>
             <div class="grid grid-cols-5 gap-2">
               <div v-for="key in ['A', 'C', 'G', 'T', 'other']" :key="key" class="flex flex-col items-center gap-1">
                 <input
@@ -399,14 +399,14 @@ const selectResult = async (result) => {
                   class="w-8 h-8 rounded cursor-pointer border border-neutral-200"
                   @input="nucleotideColors[key] = $event.target.value"
                 />
-                <span class="text-xs text-neutral-500">{{ key === 'other' ? '?' : key }}</span>
+                <span class="text-xs text-neutral-500 dark:text-neutral-400">{{ key === 'other' ? '?' : key }}</span>
               </div>
             </div>
           </div>
 
           <!-- Reset Colors -->
           <button
-            class="text-xs text-neutral-400 hover:text-neutral-600 text-left transition-colors"
+            class="text-xs text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 text-left transition-colors"
             @click="nucleotideColors = { A: '#22c55e', C: '#3b82f6', G: '#000000', T: '#ef4444', other: '#9ca3af' }"
           >
             Reset colors to default
