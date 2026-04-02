@@ -1,9 +1,13 @@
 {
-  // https://developers.cloudflare.com/pages/framework-guides/deploy-a-nuxt-site/
-  // NOTE: nitro's cloudflare-pages preset generates its own wrangler config at
-  // dist/_worker.js/wrangler.json and overrides pages_build_output_dir.
-  // Actual build output is dist/ — Cloudflare Pages handles deploy automatically,
-  // no custom deploy command should be set in the dashboard.
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "dna-barcoder",
-  "compatibility_date": "2025-01-01"
+  "compatibility_date": "2025-09-27",
+  "pages_build_output_dir": "./dist",
+  "observability": {
+    "enabled": true
+  },
+  "upload_source_maps": true,
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
 }
