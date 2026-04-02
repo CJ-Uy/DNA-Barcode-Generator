@@ -1,17 +1,18 @@
 <script setup>
-import html2canvas from 'html2canvas'
-
 // ─── Barcode State ───────────────────────────────────────
 const dnaSequence = ref('')
-const barcodeWidth = ref(500)
 const barcodeColors = ref([])
-const barcodeElement = ref(null)
+
+// ─── Layout Controls ─────────────────────────────────────
+const barsPerRowTarget = ref(80)  // user-facing "bars per row" slider
+const rectangleLock = ref(false)
 
 // ─── Advanced Settings ───────────────────────────────────
 const showAdvanced = ref(false)
-const rectangleLock = ref(false)
 const barWidth = ref(4)
+const barHeight = ref(40)
 const barGap = ref(1)
+const rowGap = ref(0)
 const nucleotideColors = ref({
   A: '#22c55e',
   C: '#3b82f6',
@@ -19,6 +20,16 @@ const nucleotideColors = ref({
   T: '#ef4444',
   other: '#9ca3af',
 })
+
+// ─── Export State ────────────────────────────────────────
+const downloadFormat = ref('png')
+const downloadBg = ref('#ffffff')
+const downloadFormats = [
+  { label: 'PNG', value: 'png' },
+  { label: 'JPG', value: 'jpg' },
+  { label: 'SVG', value: 'svg' },
+  { label: 'Transparent', value: 'transparent' },
+]
 
 const colorMapping = computed(() => ({
   a: nucleotideColors.value.A,
@@ -36,50 +47,69 @@ const legendItems = computed(() => [
   { nucleotide: 'Other', color: nucleotideColors.value.other },
 ])
 
-// Rectangle lock: uses CSS grid for exact column layout
+// Column counts where the last row is missing ≤5 bars (almost-clean rectangle)
+const validCols = computed(() => {
+  const n = barcodeColors.value.length
+  if (n === 0) return []
+  const valid = []
+  for (let c = 1; c <= n; c++) {
+    const remainder = n % c
+    const missing = remainder === 0 ? 0 : c - remainder
+    if (missing <= 5) valid.push(c)
+  }
+  return valid
+})
+
+// Actual bars per row: snaps to nearest valid col when locked, raw target otherwise
 const barsPerRow = computed(() => {
-  const step = barWidth.value + barGap.value
-  return step > 0 ? Math.max(1, Math.floor(barcodeWidth.value / step)) : 1
+  const target = Math.max(1, barsPerRowTarget.value)
+  if (!rectangleLock.value || validCols.value.length === 0) return target
+  return validCols.value.reduce((best, c) =>
+    Math.abs(c - target) < Math.abs(best - target) ? c : best
+  )
 })
 
-// Pad last row so the grid fills a complete rectangle
-const displayColors = computed(() => {
-  if (!rectangleLock.value || barcodeColors.value.length === 0) return barcodeColors.value
-  const extra = barcodeColors.value.length % barsPerRow.value
-  if (extra === 0) return barcodeColors.value
-  return [...barcodeColors.value, ...Array(barsPerRow.value - extra).fill('transparent')]
-})
+const maxBarsPerRow = computed(() => Math.max(1, barcodeColors.value.length))
 
-// Container style: grid when locked, fixed-width inline-block when not
-const barcodeContainerStyle = computed(() => {
-  if (rectangleLock.value && barcodeColors.value.length > 0) {
-    const cols = barsPerRow.value
-    const w = cols * barWidth.value + Math.max(0, cols - 1) * barGap.value
-    return {
-      display: 'grid',
-      gridTemplateColumns: `repeat(${cols}, ${barWidth.value}px)`,
-      columnGap: barGap.value + 'px',
-      rowGap: '0px',
-      width: w + 'px',
-    }
-  }
-  return { width: barcodeWidth.value + 'px' }
-})
-
-// Bar style: no margin when using grid (grid-gap handles spacing)
-const barStyle = (color) => {
-  if (rectangleLock.value) {
-    return { backgroundColor: color, width: barWidth.value + 'px', height: '40px' }
-  }
-  return {
-    backgroundColor: color,
-    width: barWidth.value + 'px',
-    marginRight: barGap.value + 'px',
-    height: '40px',
-    display: 'inline-block',
-    verticalAlign: 'top',
-  }
+// On lock-enable or new barcode, snap to the valid col count closest to a square
+const _snapToSquare = () => {
+  if (!rectangleLock.value || validCols.value.length === 0) return
+  const sq = Math.sqrt(barcodeColors.value.length)
+  barsPerRowTarget.value = validCols.value.reduce((best, c) =>
+    Math.abs(c - sq) < Math.abs(best - sq) ? c : best
+  )
 }
+watch(rectangleLock, (locked) => { if (locked) _snapToSquare() })
+watch(barcodeColors, () => { if (rectangleLock.value) _snapToSquare() })
+
+// Pad last row with transparent bars when locked and not a perfect fill
+const displayColors = computed(() => {
+  if (barcodeColors.value.length === 0) return []
+  const cols = barsPerRow.value
+  const extra = barcodeColors.value.length % cols
+  if (!rectangleLock.value || extra === 0) return barcodeColors.value
+  return [...barcodeColors.value, ...Array(cols - extra).fill('transparent')]
+})
+
+// Always CSS grid — both locked and unlocked use barsPerRow columns
+const barcodeContainerStyle = computed(() => {
+  if (barcodeColors.value.length === 0) return {}
+  const cols = barsPerRow.value
+  const w = cols * barWidth.value + Math.max(0, cols - 1) * barGap.value
+  return {
+    display: 'grid',
+    gridTemplateColumns: `repeat(${cols}, ${barWidth.value}px)`,
+    columnGap: barGap.value + 'px',
+    rowGap: rowGap.value + 'px',
+    width: w + 'px',
+  }
+})
+
+const barStyle = (color) => ({
+  backgroundColor: color,
+  width: barWidth.value + 'px',
+  height: barHeight.value + 'px',
+})
 
 const generateBarcode = () => {
   barcodeColors.value = dnaSequence.value
@@ -96,26 +126,71 @@ const clearAll = () => {
   showResults.value = false
 }
 
-const downloadBarcode = async () => {
-  window.scrollTo(0, 0)
-  if (barcodeElement.value instanceof HTMLElement) {
-    const canvas = await html2canvas(barcodeElement.value, {
-      width: barcodeElement.value.scrollWidth,
-      height: barcodeElement.value.scrollHeight,
-      windowWidth: barcodeElement.value.scrollWidth,
-      windowHeight: barcodeElement.value.scrollHeight,
-      scrollY: -window.scrollY,
-      scale: 1,
-      backgroundColor: null,
-    })
-    const image = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.href = image
-    link.download = 'dna-barcode.png'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+const _triggerDownload = (href, filename) => {
+  const link = document.createElement('a')
+  link.href = href
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Build a canvas that exactly matches the preview (uses displayColors + rowGap)
+const _buildCanvas = () => {
+  const colors = displayColors.value
+  if (colors.length === 0) return null
+  const cols = barsPerRow.value
+  const rows = Math.ceil(colors.length / cols)
+  const colStep = barWidth.value + barGap.value
+  const rowStep = barHeight.value + rowGap.value
+  const w = cols * barWidth.value + Math.max(0, cols - 1) * barGap.value
+  const h = rows * barHeight.value + Math.max(0, rows - 1) * rowGap.value
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (downloadFormat.value !== 'transparent') {
+    ctx.fillStyle = downloadBg.value
+    ctx.fillRect(0, 0, w, h)
   }
+  colors.forEach((color, i) => {
+    if (color === 'transparent') return
+    ctx.fillStyle = color
+    ctx.fillRect((i % cols) * colStep, Math.floor(i / cols) * rowStep, barWidth.value, barHeight.value)
+  })
+  return canvas
+}
+
+const downloadBarcode = () => {
+  const colors = displayColors.value
+  if (colors.length === 0) return
+
+  if (downloadFormat.value === 'svg') {
+    const cols = barsPerRow.value
+    const rows = Math.ceil(colors.length / cols)
+    const colStep = barWidth.value + barGap.value
+    const rowStep = barHeight.value + rowGap.value
+    const w = cols * barWidth.value + Math.max(0, cols - 1) * barGap.value
+    const h = rows * barHeight.value + Math.max(0, rows - 1) * rowGap.value
+    const bg = downloadFormat.value !== 'transparent'
+      ? `<rect width="${w}" height="${h}" fill="${downloadBg.value}"/>`
+      : ''
+    const rects = colors.map((color, i) => {
+      if (color === 'transparent') return ''
+      return `<rect x="${(i % cols) * colStep}" y="${Math.floor(i / cols) * rowStep}" width="${barWidth.value}" height="${barHeight.value}" fill="${color}"/>`
+    }).join('')
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${bg}${rects}</svg>`
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }))
+    _triggerDownload(url, 'dna-barcode.svg')
+    URL.revokeObjectURL(url)
+    return
+  }
+
+  const canvas = _buildCanvas()
+  if (!canvas) return
+  const mime = downloadFormat.value === 'jpg' ? 'image/jpeg' : 'image/png'
+  const ext = downloadFormat.value === 'transparent' ? 'png' : downloadFormat.value
+  _triggerDownload(canvas.toDataURL(mime, 0.95), `dna-barcode.${ext}`)
 }
 
 // ─── Sequence Stats ───────────────────────────────────────
@@ -326,25 +401,13 @@ const selectResult = async (result) => {
       </template>
     </UCard>
 
-    <!-- Card 3: Barcode Output -->
+    <!-- Card 3: Barcode Controls -->
     <UCard v-if="barcodeColors.length > 0">
       <template #header>
         <h2 class="text-lg font-semibold text-neutral-800 dark:text-neutral-100">Barcode</h2>
       </template>
 
       <div class="flex flex-col items-center gap-4">
-        <!-- Barcode visualization -->
-        <div
-          ref="barcodeElement"
-          :style="barcodeContainerStyle"
-          class="overflow-hidden"
-        >
-          <div
-            v-for="(color, index) in displayColors"
-            :key="index"
-            :style="barStyle(color)"
-          />
-        </div>
 
         <!-- Legend -->
         <div class="flex flex-wrap justify-center gap-6">
@@ -354,13 +417,13 @@ const selectResult = async (result) => {
           </div>
         </div>
 
-        <!-- Width Slider -->
+        <!-- Bars per row slider -->
         <div class="w-full max-w-sm">
           <div class="flex justify-between text-xs text-neutral-400 dark:text-neutral-500 mb-1">
-            <span>Width</span>
-            <span>{{ barcodeWidth }}px</span>
+            <span>Bars per row</span>
+            <span>{{ barsPerRow }}{{ rectangleLock && barsPerRow !== barsPerRowTarget ? ' (snapped)' : '' }}</span>
           </div>
-          <USlider v-model="barcodeWidth" :min="100" :max="1500" />
+          <USlider v-model="barsPerRowTarget" :min="1" :max="maxBarsPerRow" />
         </div>
 
         <!-- Rectangle Lock Toggle -->
@@ -372,8 +435,10 @@ const selectResult = async (result) => {
             class="w-4 h-4 accent-primary-500 cursor-pointer"
           />
           <label for="rect-lock" class="text-xs text-neutral-600 dark:text-neutral-300 cursor-pointer select-none">
-            Rectangle lock — snap to clean block
-            <span v-if="rectangleLock" class="text-neutral-400">({{ barsPerRow }} bars/row)</span>
+            Rectangle lock
+            <span v-if="rectangleLock" class="text-neutral-400">
+              — {{ barsPerRow }} cols × {{ Math.ceil(barcodeColors.length / barsPerRow) }} rows
+            </span>
           </label>
         </div>
 
@@ -397,13 +462,31 @@ const selectResult = async (result) => {
             <USlider v-model="barWidth" :min="1" :max="16" />
           </div>
 
-          <!-- Gap -->
+          <!-- Bar Height -->
+          <div>
+            <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <span>Bar height</span>
+              <span>{{ barHeight }}px</span>
+            </div>
+            <USlider v-model="barHeight" :min="4" :max="200" />
+          </div>
+
+          <!-- Column gap -->
           <div>
             <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
               <span>Gap between bars</span>
               <span>{{ barGap }}px</span>
             </div>
             <USlider v-model="barGap" :min="0" :max="8" />
+          </div>
+
+          <!-- Row gap -->
+          <div>
+            <div class="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <span>Gap between rows</span>
+              <span>{{ rowGap }}px</span>
+            </div>
+            <USlider v-model="rowGap" :min="0" :max="16" />
           </div>
 
           <!-- Nucleotide Colors -->
@@ -431,17 +514,54 @@ const selectResult = async (result) => {
           </button>
 
         </div>
-      </div>
 
-      <template #footer>
-        <UButton
-          label="Download PNG"
-          icon="i-heroicons-arrow-down-tray"
-          variant="soft"
-          @click="downloadBarcode"
-        />
-      </template>
+        <!-- Export Section -->
+        <div class="w-full max-w-sm flex flex-col gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-700">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Export</p>
+
+          <!-- Format pills -->
+          <div class="flex gap-2 flex-wrap">
+            <button
+              v-for="fmt in downloadFormats"
+              :key="fmt.value"
+              :class="[
+                'text-xs px-3 py-1 rounded-full border transition-colors',
+                downloadFormat === fmt.value
+                  ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-950 dark:text-primary-300'
+                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-500'
+              ]"
+              @click="downloadFormat = fmt.value"
+            >{{ fmt.label }}</button>
+          </div>
+
+          <!-- Background color (hidden for transparent) -->
+          <div v-if="downloadFormat !== 'transparent'" class="flex items-center gap-3">
+            <label class="text-xs text-neutral-500 dark:text-neutral-400">Background</label>
+            <input type="color" v-model="downloadBg" class="w-7 h-7 rounded cursor-pointer border border-neutral-200" />
+            <span class="text-xs text-neutral-400 font-mono">{{ downloadBg }}</span>
+          </div>
+
+          <UButton
+            label="Download"
+            icon="i-heroicons-arrow-down-tray"
+            variant="soft"
+            class="self-start"
+            @click="downloadBarcode"
+          />
+        </div>
+
+      </div>
     </UCard>
+
+    <!-- Barcode visualization — always outside the card, below controls -->
+    <div
+      v-if="barcodeColors.length > 0"
+      class="relative w-screen left-1/2 -translate-x-1/2 bg-white dark:bg-neutral-900 border-y border-neutral-200 dark:border-neutral-800 py-6 overflow-x-auto flex justify-center"
+    >
+      <div :style="barcodeContainerStyle">
+        <div v-for="(color, index) in displayColors" :key="index" :style="barStyle(color)" />
+      </div>
+    </div>
 
   </div>
 </template>
