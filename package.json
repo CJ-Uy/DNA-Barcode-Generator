@@ -12,8 +12,8 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
-    "@nuxt/ui": "^2.13.0",
-    "nuxt": "^3.10.1"
+    "@nuxt/ui": "^3.3.7",
+    "nuxt": "^3.21.2"
   },
   "dependencies": {
     "html2canvas": "^1.4.1"

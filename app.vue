@@ -67,11 +67,10 @@ const downloadBarcode = async () => {
             @click="generateBarcode"
             class="mr-3 mb-5"
           />
-          <URange
+          <USlider
             v-model="barcodeWidth"
-            label="Barcode Width"
-            min="100"
-            max="1500"
+            :min="100"
+            :max="1500"
           />
           <UButton label="Download DNA Barcode" @click="downloadBarcode" />
         </div>
