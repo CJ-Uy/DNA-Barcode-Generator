@@ -73,7 +73,8 @@ const seqStats = computed(() => {
     else if (ch === 'T') counts.T++
     else if (ch.trim()) counts.other++
   }
-  const gcContent = len > 0 ? (((counts.G + counts.C) / len) * 100).toFixed(1) : '0.0'
+  const totalNucleotides = counts.A + counts.C + counts.G + counts.T
+  const gcContent = totalNucleotides > 0 ? (((counts.G + counts.C) / totalNucleotides) * 100).toFixed(1) : '0.0'
   return { len, gcContent, ...counts }
 })
 
@@ -103,6 +104,7 @@ const ncbi = useNCBI()
 const searchQuery = ref('')
 const selectedGeneType = ref('COI (mtDNA)')
 const showResults = ref(false)
+const loadingResult = ref(false)
 
 const geneTypeOptions = [
   { label: 'COI (mtDNA)', value: 'COI (mtDNA)' },
@@ -123,9 +125,9 @@ const handleSearch = async () => {
 }
 
 const selectResult = async (result) => {
-  ncbi.pending.value = true
+  loadingResult.value = true
   const sequence = await ncbi.fetchSequence(result.id)
-  ncbi.pending.value = false
+  loadingResult.value = false
   if (sequence) {
     dnaSequence.value = sequence
     barcodeColors.value = []
@@ -180,7 +182,8 @@ const selectResult = async (result) => {
           <button
             v-for="result in ncbi.results.value"
             :key="result.id"
-            class="w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 border-b border-neutral-100 last:border-0 transition-colors"
+            class="w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 border-b border-neutral-100 last:border-0 transition-colors disabled:opacity-50"
+            :disabled="loadingResult"
             @click="selectResult(result)"
           >
             <div class="font-medium text-neutral-800 truncate">{{ result.title }}</div>
