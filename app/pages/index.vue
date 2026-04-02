@@ -368,7 +368,7 @@ const selectResult = async (result) => {
         </button>
 
         <!-- Advanced Settings Panel -->
-        <div v-if="showAdvanced" class="w-full max-w-sm flex flex-col gap-4 border border-neutral-100 rounded-lg p-4 bg-neutral-50">
+        <div v-if="showAdvanced" class="w-full max-w-sm flex flex-col gap-4 border border-neutral-100 dark:border-neutral-700 rounded-lg p-4 bg-neutral-50 dark:bg-neutral-800">
 
           <!-- Bar Width -->
           <div>
