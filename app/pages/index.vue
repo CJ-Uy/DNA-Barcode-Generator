@@ -7,27 +7,60 @@ const barcodeWidth = ref(500)
 const barcodeColors = ref([])
 const barcodeElement = ref(null)
 
-const colorMapping = {
-  a: 'green',
-  c: 'blue',
-  g: 'black',
-  t: 'red',
-  default: 'gray',
-}
+// ─── Advanced Settings ───────────────────────────────────
+const showAdvanced = ref(false)
+const rectangleLock = ref(false)
+const barWidth = ref(4)
+const barGap = ref(1)
+const nucleotideColors = ref({
+  A: '#22c55e',
+  C: '#3b82f6',
+  G: '#000000',
+  T: '#ef4444',
+  other: '#9ca3af',
+})
 
-const legendItems = [
-  { nucleotide: 'A', color: 'green' },
-  { nucleotide: 'C', color: 'blue' },
-  { nucleotide: 'G', color: 'black' },
-  { nucleotide: 'T', color: 'red' },
-  { nucleotide: 'Other', color: 'gray' },
-]
+const colorMapping = computed(() => ({
+  a: nucleotideColors.value.A,
+  c: nucleotideColors.value.C,
+  g: nucleotideColors.value.G,
+  t: nucleotideColors.value.T,
+  default: nucleotideColors.value.other,
+}))
+
+const legendItems = computed(() => [
+  { nucleotide: 'A', color: nucleotideColors.value.A },
+  { nucleotide: 'C', color: nucleotideColors.value.C },
+  { nucleotide: 'G', color: nucleotideColors.value.G },
+  { nucleotide: 'T', color: nucleotideColors.value.T },
+  { nucleotide: 'Other', color: nucleotideColors.value.other },
+])
+
+// Rectangle lock: snaps container width to exact bar multiples
+const barsPerRow = computed(() => {
+  const step = barWidth.value + barGap.value
+  return step > 0 ? Math.max(1, Math.floor(barcodeWidth.value / step)) : 1
+})
+
+const effectiveBarcodeWidth = computed(() => {
+  if (!rectangleLock.value || barcodeColors.value.length === 0) return barcodeWidth.value
+  return barsPerRow.value * (barWidth.value + barGap.value) - barGap.value
+})
+
+// Pad last row with transparent bars when lock is on
+const displayColors = computed(() => {
+  if (!rectangleLock.value || barcodeColors.value.length === 0) return barcodeColors.value
+  const extra = barcodeColors.value.length % barsPerRow.value
+  if (extra === 0) return barcodeColors.value
+  const padding = Array(barsPerRow.value - extra).fill('transparent')
+  return [...barcodeColors.value, ...padding]
+})
 
 const generateBarcode = () => {
   barcodeColors.value = dnaSequence.value
     .toLowerCase()
     .split('')
-    .map((n) => colorMapping[n] || colorMapping.default)
+    .map((n) => colorMapping.value[n] || colorMapping.value.default)
 }
 
 const clearAll = () => {
@@ -278,14 +311,20 @@ const selectResult = async (result) => {
         <!-- Barcode visualization -->
         <div
           ref="barcodeElement"
-          :style="{ width: barcodeWidth + 'px' }"
-          class="overflow-x-auto"
+          :style="{ width: effectiveBarcodeWidth + 'px' }"
+          class="overflow-hidden"
         >
           <div
-            v-for="(color, index) in barcodeColors"
+            v-for="(color, index) in displayColors"
             :key="index"
-            :style="{ backgroundColor: color }"
-            class="w-1 h-10 mr-px inline-block mb-[-3.5px]"
+            :style="{
+              backgroundColor: color,
+              width: barWidth + 'px',
+              marginRight: barGap + 'px',
+              height: '40px',
+              display: 'inline-block',
+              verticalAlign: 'top',
+            }"
           />
         </div>
 
@@ -304,6 +343,75 @@ const selectResult = async (result) => {
             <span>{{ barcodeWidth }}px</span>
           </div>
           <USlider v-model="barcodeWidth" :min="100" :max="1500" />
+        </div>
+
+        <!-- Rectangle Lock Toggle -->
+        <div class="flex items-center gap-2 w-full max-w-sm">
+          <input
+            id="rect-lock"
+            v-model="rectangleLock"
+            type="checkbox"
+            class="w-4 h-4 accent-primary-500 cursor-pointer"
+          />
+          <label for="rect-lock" class="text-xs text-neutral-600 cursor-pointer select-none">
+            Rectangle lock — snap to clean block
+            <span v-if="rectangleLock" class="text-neutral-400">({{ barsPerRow }} bars/row)</span>
+          </label>
+        </div>
+
+        <!-- Advanced Settings Toggle -->
+        <button
+          class="text-xs text-neutral-400 hover:text-neutral-600 transition-colors w-full max-w-sm text-left"
+          @click="showAdvanced = !showAdvanced"
+        >
+          {{ showAdvanced ? '▾ Hide advanced settings' : '▸ Advanced settings' }}
+        </button>
+
+        <!-- Advanced Settings Panel -->
+        <div v-if="showAdvanced" class="w-full max-w-sm flex flex-col gap-4 border border-neutral-100 rounded-lg p-4 bg-neutral-50">
+
+          <!-- Bar Width -->
+          <div>
+            <div class="flex justify-between text-xs text-neutral-500 mb-1">
+              <span>Bar width</span>
+              <span>{{ barWidth }}px</span>
+            </div>
+            <USlider v-model="barWidth" :min="1" :max="16" />
+          </div>
+
+          <!-- Gap -->
+          <div>
+            <div class="flex justify-between text-xs text-neutral-500 mb-1">
+              <span>Gap between bars</span>
+              <span>{{ barGap }}px</span>
+            </div>
+            <USlider v-model="barGap" :min="0" :max="8" />
+          </div>
+
+          <!-- Nucleotide Colors -->
+          <div>
+            <p class="text-xs text-neutral-500 mb-2">Nucleotide colors</p>
+            <div class="grid grid-cols-5 gap-2">
+              <div v-for="key in ['A', 'C', 'G', 'T', 'other']" :key="key" class="flex flex-col items-center gap-1">
+                <input
+                  type="color"
+                  :value="nucleotideColors[key]"
+                  class="w-8 h-8 rounded cursor-pointer border border-neutral-200"
+                  @input="nucleotideColors[key] = $event.target.value"
+                />
+                <span class="text-xs text-neutral-500">{{ key === 'other' ? '?' : key }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reset Colors -->
+          <button
+            class="text-xs text-neutral-400 hover:text-neutral-600 text-left transition-colors"
+            @click="nucleotideColors = { A: '#22c55e', C: '#3b82f6', G: '#000000', T: '#ef4444', other: '#9ca3af' }"
+          >
+            Reset colors to default
+          </button>
+
         </div>
       </div>
 
