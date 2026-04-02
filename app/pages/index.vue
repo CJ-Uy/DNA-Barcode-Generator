@@ -36,25 +36,50 @@ const legendItems = computed(() => [
   { nucleotide: 'Other', color: nucleotideColors.value.other },
 ])
 
-// Rectangle lock: snaps container width to exact bar multiples
+// Rectangle lock: uses CSS grid for exact column layout
 const barsPerRow = computed(() => {
   const step = barWidth.value + barGap.value
   return step > 0 ? Math.max(1, Math.floor(barcodeWidth.value / step)) : 1
 })
 
-const effectiveBarcodeWidth = computed(() => {
-  if (!rectangleLock.value || barcodeColors.value.length === 0) return barcodeWidth.value
-  return barsPerRow.value * (barWidth.value + barGap.value) - barGap.value
-})
-
-// Pad last row with transparent bars when lock is on
+// Pad last row so the grid fills a complete rectangle
 const displayColors = computed(() => {
   if (!rectangleLock.value || barcodeColors.value.length === 0) return barcodeColors.value
   const extra = barcodeColors.value.length % barsPerRow.value
   if (extra === 0) return barcodeColors.value
-  const padding = Array(barsPerRow.value - extra).fill('transparent')
-  return [...barcodeColors.value, ...padding]
+  return [...barcodeColors.value, ...Array(barsPerRow.value - extra).fill('transparent')]
 })
+
+// Container style: grid when locked, fixed-width inline-block when not
+const barcodeContainerStyle = computed(() => {
+  if (rectangleLock.value && barcodeColors.value.length > 0) {
+    const cols = barsPerRow.value
+    const w = cols * barWidth.value + Math.max(0, cols - 1) * barGap.value
+    return {
+      display: 'grid',
+      gridTemplateColumns: `repeat(${cols}, ${barWidth.value}px)`,
+      columnGap: barGap.value + 'px',
+      rowGap: '0px',
+      width: w + 'px',
+    }
+  }
+  return { width: barcodeWidth.value + 'px' }
+})
+
+// Bar style: no margin when using grid (grid-gap handles spacing)
+const barStyle = (color) => {
+  if (rectangleLock.value) {
+    return { backgroundColor: color, width: barWidth.value + 'px', height: '40px' }
+  }
+  return {
+    backgroundColor: color,
+    width: barWidth.value + 'px',
+    marginRight: barGap.value + 'px',
+    height: '40px',
+    display: 'inline-block',
+    verticalAlign: 'top',
+  }
+}
 
 const generateBarcode = () => {
   barcodeColors.value = dnaSequence.value
@@ -311,20 +336,13 @@ const selectResult = async (result) => {
         <!-- Barcode visualization -->
         <div
           ref="barcodeElement"
-          :style="{ width: effectiveBarcodeWidth + 'px' }"
+          :style="barcodeContainerStyle"
           class="overflow-hidden"
         >
           <div
             v-for="(color, index) in displayColors"
             :key="index"
-            :style="{
-              backgroundColor: color,
-              width: barWidth + 'px',
-              marginRight: barGap + 'px',
-              height: '40px',
-              display: 'inline-block',
-              verticalAlign: 'top',
-            }"
+            :style="barStyle(color)"
           />
         </div>
 
